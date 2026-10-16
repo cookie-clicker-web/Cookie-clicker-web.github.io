@@ -7,8 +7,8 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
 html,body{min-height:100%;overscroll-behavior:none}
-html{height:100%;overflow:hidden}
-body{height:100%;overflow-y:auto;background:radial-gradient(circle at top,#ffffff 0%,#fdf3e4 60%,#f7e6cf 100%);color:#3b2716;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;align-items:flex-start;justify-content:center}
+html{height:100%;overflow:hidden;background:#f7e6cf}
+body{height:100%;height:100dvh;overflow-y:auto;background:radial-gradient(circle at top,#ffffff 0%,#fdf3e4 60%,#f7e6cf 100%) #f7e6cf;color:#3b2716;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;align-items:flex-start;justify-content:center}
 .wrap{display:flex;flex-direction:column;align-items:center;gap:20px;width:100%;max-width:420px;padding:28px 20px 40px;text-align:center}
 .stats{text-align:center;width:100%}
 #count{font-size:clamp(2.4rem,9vw,3.4rem);font-weight:800;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;color:#3b2716}
@@ -18,12 +18,13 @@ body{height:100%;overflow-y:auto;background:radial-gradient(circle at top,#fffff
 .cookieWrap{position:relative;width:min(64vw,250px);height:min(64vw,250px);margin:30px 0}
 #cookie{position:absolute;inset:0;width:100%;height:100%;border:none;background:none;padding:0;cursor:pointer;transition:transform 0.08s ease-out;outline:none}
 #cookie:active{transform:scale(0.94)}
-#cookie svg{width:100%;height:100%;display:block;filter:drop-shadow(0 14px 22px rgba(120,70,20,0.28))}
+#cookie svg{width:100%;height:100%;display:block}
+.cookieWrap::before{content:'';position:absolute;inset:-4% -8% -14% -8%;border-radius:50%;background:radial-gradient(closest-side,rgba(120,70,20,0.3) 0%,rgba(120,70,20,0.18) 55%,rgba(120,70,20,0) 100%);pointer-events:none}
 #cookie.pulse{animation:pulse 0.15s ease-out}
 @keyframes pulse{50%{transform:scale(1.04)}}
 .orbit{position:absolute;inset:0;pointer-events:none}
 .orbit.hidden{display:none}
-.ptr{position:absolute;top:calc(50% - 15px);left:calc(50% - 15px);width:30px;height:30px}
+.ptr{position:absolute;top:calc(50% - 15px);left:calc(50% - 15px);width:30px;height:30px;will-change:transform}
 .ptr svg{width:100%;height:100%;filter:drop-shadow(0 2px 2px rgba(0,0,0,0.3))}
 .shop{display:flex;flex-direction:column;gap:12px;width:100%}
 .item{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;padding:16px 18px;background:linear-gradient(180deg,#ffc75e,#f59a2b);border:2px solid #b8600f;border-radius:16px;color:#3b1f08;font:inherit;cursor:pointer;text-align:left;box-shadow:0 4px 0 #b8600f,0 8px 16px rgba(120,60,10,0.25);transition:transform 0.1s,box-shadow 0.1s,filter 0.15s}
@@ -51,33 +52,44 @@ body{height:100%;overflow-y:auto;background:radial-gradient(circle at top,#fffff
 .badge.on{background:linear-gradient(180deg,#ffd27a,#f5b04a);color:#3b1f08;opacity:1;font-weight:800;border:1px solid #b8600f}
 #toast{position:fixed;top:20px;left:50%;transform:translate(-50%,-160%);background:#3b2716;color:#fff7ea;padding:12px 20px;border-radius:14px;font-weight:700;font-size:0.95rem;transition:transform 0.35s ease;z-index:20;box-shadow:0 8px 20px rgba(0,0,0,0.25);white-space:nowrap}
 #toast.show{transform:translate(-50%,0)}
-.menu{position:fixed;top:14px;right:14px;z-index:25}
-#menuBtn{width:40px;height:40px;border:none;background:rgba(255,255,255,0.8);border-radius:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;box-shadow:0 2px 8px rgba(120,70,20,0.15)}
+.menu{position:fixed;top:14px;right:14px;z-index:25;width:40px;height:40px}
+.panel{position:absolute;top:0;right:0;width:40px;height:40px;background:rgba(255,255,255,0.85);border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(120,70,20,0.15);transition:width 0.35s cubic-bezier(.2,.9,.3,1),height 0.35s cubic-bezier(.2,.9,.3,1),border-radius 0.35s ease,box-shadow 0.3s ease}
+.panel.open{width:200px;height:150px;border-radius:14px;box-shadow:0 8px 20px rgba(0,0,0,0.2)}
+#menuBtn{position:absolute;top:0;right:0;width:40px;height:40px;border:none;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;z-index:2;transition:opacity 0.18s ease}
 #menuBtn span{width:5px;height:5px;border-radius:50%;background:#3b2716;display:block}
-.panel{position:absolute;top:48px;right:0;background:#fff7ea;border-radius:14px;padding:8px;box-shadow:0 8px 20px rgba(0,0,0,0.2);width:230px;text-align:center}
-.panel.hidden{display:none}
-#clearBtn{width:100%;padding:12px 14px;border:none;background:none;border-radius:10px;font:inherit;font-weight:700;color:#a1260d;cursor:pointer;text-align:center}
-#clearBtn:hover{background:#fbe3da}
-.divider{border:none;border-top:1px solid rgba(120,70,20,0.15);margin:4px 10px}
-.panelNote{padding:6px 10px 8px;font-size:0.75rem;line-height:1.4;color:#7a6650}
+.panel.open #menuBtn{opacity:0;pointer-events:none}
+.panelInner{position:absolute;top:0;left:0;width:200px;padding:0 6px 0;text-align:center;opacity:0;pointer-events:none;transition:opacity 0.12s ease}
+.panel.open .panelInner{opacity:1;pointer-events:auto;transition:opacity 0.25s ease 0.18s}
+#musicBtn,#clearBtn{width:100%;padding:8px 8px;border:none;background:none;border-radius:8px;font:inherit;font-size:0.95rem;font-weight:700;cursor:pointer;text-align:center}
+#musicBtn{color:#3b2716}
+#musicBtn:hover,#clearBtn:hover{background:rgba(120,70,20,0.08)}
+#clearBtn{color:#a1260d}
+.divider{border:none;border-top:1px solid rgba(120,70,20,0.15);margin:4px 4px}
+.panelNote{padding:0 4px 8px;font-size:0.72rem;line-height:1.3;color:#7a6650}
 .warn{position:fixed;inset:0;background:rgba(40,25,15,0.6);display:flex;align-items:center;justify-content:center;z-index:30;padding:20px}
 .warn.hidden{display:none}
 .warnbox{background:#fff7ea;border-radius:18px;padding:24px 22px;max-width:320px;width:100%;text-align:center;box-shadow:0 12px 30px rgba(0,0,0,0.3)}
 .warnbox h2{font-size:1.2rem;margin-bottom:10px}
 .warnbox p{font-size:0.92rem;line-height:1.4;margin-bottom:8px}
+#warnReason{font-size:0.8rem;color:#7a6650;min-height:1.2em}
 #warnCount{font-weight:900;color:#a1260d;min-height:1.2em}
 #warnOk{margin-top:12px;width:100%;padding:12px;border:2px solid #b8600f;border-radius:14px;background:linear-gradient(180deg,#ffc75e,#f59a2b);color:#3b1f08;font:inherit;font-weight:900;cursor:pointer}
 </style>
 </head>
 <body>
 <div class="menu">
-  <button id="menuBtn" aria-label="menu"><span></span><span></span><span></span></button>
-  <div id="menuPanel" class="panel hidden">
-    <button id="clearBtn">clear progress</button>
-    <hr class="divider">
-    <p class="panelNote">progress is saved to local storage and clearing cache will delete progress</p>
+  <div id="menuPanel" class="panel">
+    <button id="menuBtn" aria-label="menu" aria-expanded="false"><span></span><span></span><span></span></button>
+    <div class="panelInner">
+      <button id="musicBtn">music on</button>
+      <hr class="divider">
+      <button id="clearBtn">clear progress</button>
+      <hr class="divider">
+      <p class="panelNote">progress is saved to local storage and clearing cache will delete progress</p>
+    </div>
   </div>
 </div>
+<audio id="bgm" loop preload="auto"><source src="default.mp3" type="audio/mpeg"></audio>
 <div class="wrap">
   <div class="stats">
     <div id="clicksps">0 clicks per second</div>
@@ -86,11 +98,7 @@ body{height:100%;overflow-y:auto;background:radial-gradient(circle at top,#fffff
     <div id="timer">0:00</div>
   </div>
   <div class="cookieWrap">
-    <div class="orbit hidden" id="orbit">
-      <div class="ptr" id="ptr">
-        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 2 L4 20 L9 15.5 L12 22 L15 20.7 L12 14.3 L19 14.3 Z" fill="#ffffff" stroke="#3b2716" stroke-width="1.6" stroke-linejoin="round"/></svg>
-      </div>
-    </div>
+    <div class="orbit hidden" id="orbit"></div>
     <button id="cookie" aria-label="cookie">
       <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -147,8 +155,8 @@ body{height:100%;overflow-y:auto;background:radial-gradient(circle at top,#fffff
     </button>
     <button class="item" id="rushBtn">
       <div class="left">
-        <span class="name">rush <span class="owned" id="rushOwned"></span></span>
-        <span class="meta">auto clicks every 0.8 ms for double value</span>
+        <span class="name">rush</span>
+        <span class="meta">2.5x cookies per click for 5 seconds</span>
       </div>
       <div class="right">
         <span class="cost" id="rushCost"></span>
@@ -168,38 +176,66 @@ body{height:100%;overflow-y:auto;background:radial-gradient(circle at top,#fffff
   <div class="warnbox">
     <h2>auto clicker detected</h2>
     <p>stop the auto clicking or your progress will be deleted</p>
+    <p id="warnReason"></p>
     <p id="warnCount"></p>
     <button id="warnOk">continue</button>
   </div>
 </div>
 <script>
 const SAVE_KEY = 'cookieclicker-save-v1';
+const MUSIC_KEY = 'cookieclicker-music';
 const CURSOR_CPS = 0.1;
+const CURSOR_BASE = 15;
+const CURSOR_GROWTH = 1.04;
+const MAX_CURSORS = 35;
+const CLICK_BASE = 50;
+const CLICK_GROWTH = 1.45;
+const CLICK_STEP = 0.3;
 const MAX_CLICK_LEVEL = 25;
-const RUSH_CLICKS_PER_SEC = 1000 / 0.8;
+const MAX_VISIBLE_CURSORS = 12;
+const RUSH_COST = 1500;
+const RUSH_MS = 5000;
+const RUSH_MULT = 2.5;
+const RUSH_STEP_MS = 8 * 60000;
+const RUSH_STEP_GROWTH = 1.25;
 const COOLDOWN = 40;
 const DETECT_REJECTS = 10;
 const WIPE_MS = 60000;
 const ORBIT_RADIUS = 150;
-const ORBIT_DEG_PER_MS = 0.072;
+const ORBIT_DEG_PER_MS = 0.2;
+const PTR_DEFAULT_DEG = 128.66;
+const PTR_SVG = '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 2 L4 20 L9 15.5 L12 22 L15 20.7 L12 14.3 L19 14.3 Z" fill="#ffffff" stroke="#3b2716" stroke-width="1.6" stroke-linejoin="round"/></svg>';
 
-const state = { cookies: 0, total: 0, cursors: 0, clickLevel: 1, rush: false };
+const state = { cookies: 0, total: 0, cursors: 0, clickLevel: 1, rushLeft: 0, rushStart: null };
 let elapsed = 0;
 let orbitAngle = 0;
+let running = false;
 const unlocked = new Set();
 const userClickTimes = [];
+const pointers = [];
 let lastBuzz = 0;
 let lastDown = 0;
 let lastAccept = 0;
 let pending = null;
 let rejects = [];
 let untrustedUntil = 0;
+let flagUntil = 0;
 let paused = false;
 let warnedOnce = false;
 let flaggedMs = 0;
 let wiping = false;
 let clearArmed = false;
 let clearTimer = null;
+const clickLog = [];
+let runAnchor = null;
+let runStart = 0;
+let runCount = 0;
+let runLast = 0;
+
+let musicOn = localStorage.getItem(MUSIC_KEY) !== '0';
+let musicPlaying = false;
+let detectReason = '';
+const recentTimes = [];
 
 const ACHIEVEMENTS = [
   { id: 't5', label: '5 minutes played', check: () => elapsed >= 5 * 60000 },
@@ -208,6 +244,9 @@ const ACHIEVEMENTS = [
   { id: 't120', label: '2 hours played', check: () => elapsed >= 120 * 60000 },
   { id: 't300', label: '5 hours played', check: () => elapsed >= 300 * 60000 },
   { id: 't600', label: '10 hours played', check: () => elapsed >= 600 * 60000 },
+  { id: 't900', label: '15 hours played', check: () => elapsed >= 900 * 60000 },
+  { id: 't1440', label: '24 hours played', check: () => elapsed >= 1440 * 60000 },
+  { id: 't2880', label: '48 hours played', check: () => elapsed >= 2880 * 60000 },
   { id: 'c500', label: '500 cookies', check: () => state.total >= 500 },
   { id: 'c1k', label: '1,000 cookies', check: () => state.total >= 1e3 },
   { id: 'c10k', label: '10,000 cookies', check: () => state.total >= 1e4 },
@@ -222,21 +261,28 @@ const ACHIEVEMENTS = [
 const $ = id => document.getElementById(id);
 const el = {
   count: $('count'), cps: $('cps'), clicksps: $('clicksps'), timer: $('timer'), cookie: $('cookie'),
-  orbit: $('orbit'), ptr: $('ptr'),
+  orbit: $('orbit'),
   cursorBtn: $('cursorBtn'), cursorCost: $('cursorCost'), cursorOwned: $('cursorOwned'), cursorStatus: $('cursorStatus'),
   clickBtn: $('clickBtn'), clickCost: $('clickCost'), clickOwned: $('clickOwned'), clickMeta: $('clickMeta'), clickStatus: $('clickStatus'),
-  rushBtn: $('rushBtn'), rushCost: $('rushCost'), rushOwned: $('rushOwned'), rushStatus: $('rushStatus'),
-  achGrid: $('achGrid'), achSummary: $('achSummary'), achToggle: $('achToggle'), achBody: $('achBody'), toast: $('toast'),
-  menuBtn: $('menuBtn'), menuPanel: $('menuPanel'), clearBtn: $('clearBtn'),
-  warn: $('warn'), warnCount: $('warnCount'), warnOk: $('warnOk')
+  rushBtn: $('rushBtn'), rushCost: $('rushCost'), rushStatus: $('rushStatus'),
+  achBox: $('achBox'), achGrid: $('achGrid'), achSummary: $('achSummary'), achToggle: $('achToggle'), achBody: $('achBody'), toast: $('toast'),
+  menuBtn: $('menuBtn'), menuPanel: $('menuPanel'), musicBtn: $('musicBtn'), clearBtn: $('clearBtn'),
+  warn: $('warn'), warnReason: $('warnReason'), warnCount: $('warnCount'), warnOk: $('warnOk'), bgm: $('bgm')
 };
 
-function timeMult(intervalMin, growth) {
-  return Math.pow(growth, Math.floor(elapsed / (intervalMin * 60000)));
+el.bgm.volume = 0.5;
+
+function cursorPrice() { return Math.ceil(CURSOR_BASE * Math.pow(CURSOR_GROWTH, state.cursors)); }
+function clickValue(level) { return Math.round((1 + (level - 1) * CLICK_STEP) * 10) / 10; }
+function setText(node, text) {
+  if (node._t !== text) { node.textContent = text; node._t = text; }
 }
-function cursorPrice() { return Math.ceil(25 * timeMult(4, 1.3)); }
-function clickPrice() { return Math.ceil(75 * Math.pow(1.35, state.clickLevel - 1) * timeMult(4.5, 1.25)); }
-function rushPrice() { return Math.ceil(1500 * timeMult(4.5, 1.5)); }
+function clickPrice() { return Math.ceil(CLICK_BASE * Math.pow(CLICK_GROWTH, state.clickLevel - 1)); }
+function rushPrice() {
+  if (state.rushStart === null) return RUSH_COST;
+  const steps = Math.floor((elapsed - state.rushStart) / RUSH_STEP_MS);
+  return Math.ceil(RUSH_COST * Math.pow(RUSH_STEP_GROWTH, steps));
+}
 
 function fmt(n) { return Math.floor(n).toLocaleString(); }
 
@@ -255,22 +301,22 @@ function addCookies(n) {
 }
 
 function setButton(btn, costEl, statusEl, price, available, label) {
-  costEl.textContent = label === undefined ? fmt(price) : label;
+  setText(costEl, label === undefined ? fmt(price) : label);
   if (available) {
-    statusEl.textContent = 'buy';
+    setText(statusEl, 'buy');
   } else if (label === undefined) {
-    statusEl.textContent = 'need ' + fmt(price - state.cookies) + ' more';
+    setText(statusEl, 'need ' + fmt(price - state.cookies) + ' more');
   } else {
-    statusEl.textContent = label;
+    setText(statusEl, label);
   }
-  btn.disabled = !available;
+  if (btn.disabled !== !available) btn.disabled = !available;
 }
 
 function buy(type) {
   if (paused) return;
   if (type === 'cursor') {
     const price = cursorPrice();
-    if (state.cookies >= price) { state.cookies -= price; state.cursors++; }
+    if (state.cursors < MAX_CURSORS && state.cookies >= price) { state.cookies -= price; state.cursors++; }
   } else if (type === 'click') {
     const price = clickPrice();
     if (state.clickLevel < MAX_CLICK_LEVEL && state.cookies >= price) {
@@ -278,7 +324,11 @@ function buy(type) {
     }
   } else if (type === 'rush') {
     const price = rushPrice();
-    if (!state.rush && state.cookies >= price) { state.cookies -= price; state.rush = true; }
+    if (state.rushLeft <= 0 && state.cookies >= price) {
+      state.cookies -= price;
+      state.rushLeft = RUSH_MS;
+      if (state.rushStart === null) state.rushStart = elapsed;
+    }
   }
   render();
   save();
@@ -301,12 +351,116 @@ function buzz(now) {
   lastBuzz = now;
 }
 
+function syncPointers() {
+  const n = Math.min(state.cursors, MAX_VISIBLE_CURSORS);
+  while (pointers.length < n) {
+    const p = document.createElement('div');
+    p.className = 'ptr';
+    p.innerHTML = PTR_SVG;
+    el.orbit.appendChild(p);
+    pointers.push(p);
+  }
+  while (pointers.length > n) {
+    pointers.pop().remove();
+  }
+}
+
 function updateOrbit() {
-  const a = orbitAngle * Math.PI / 180;
-  const x = ORBIT_RADIUS * Math.cos(a);
-  const y = ORBIT_RADIUS * Math.sin(a);
-  const r = orbitAngle + 315;
-  el.ptr.style.transform = 'translate(' + x + 'px,' + y + 'px) rotate(' + r + 'deg)';
+  const n = pointers.length;
+  el.orbit.classList.toggle('hidden', n < 1);
+  for (let i = 0; i < n; i++) {
+    const a = (orbitAngle + i * 360 / n) * Math.PI / 180;
+    const x = ORBIT_RADIUS * Math.cos(a);
+    const y = ORBIT_RADIUS * Math.sin(a);
+    const heading = Math.atan2(Math.cos(a), -Math.sin(a)) * 180 / Math.PI;
+    const rot = heading + PTR_DEFAULT_DEG;
+    pointers[i].style.transform = 'translate(' + x + 'px,' + y + 'px) rotate(' + rot + 'deg)';
+  }
+}
+
+function updateMusic() {
+  const want = musicOn && running && !paused;
+  if (want === musicPlaying) return;
+  musicPlaying = want;
+  if (want) {
+    const p = el.bgm.play();
+    if (p && p.catch) p.catch(() => {});
+  } else {
+    el.bgm.pause();
+  }
+}
+
+function setMusicOn(on) {
+  musicOn = on;
+  try { localStorage.setItem(MUSIC_KEY, on ? '1' : '0'); } catch (e) {}
+  el.musicBtn.textContent = on ? 'music on' : 'music off';
+  updateMusic();
+}
+
+function silenceMusic() {
+  musicPlaying = false;
+  el.bgm.pause();
+}
+
+function flagClick(t, reason) {
+  flagUntil = t + 2500;
+  detectReason = reason;
+}
+
+const CLICK_BUFFER = 30;
+const SAME_PIXEL_RUN = 12;
+const SAME_PIXEL_MEAN_MS = 220;
+const SD_FLAG_MS = 3;
+const FAST_MEAN_MS = 300;
+const MIN_GAPS_FOR_TIMING = 20;
+const CPS_FLAG = 15;
+const STRIKES_NEEDED = 2;
+const STRIKE_WINDOW_MS = 6000;
+const strikes = [];
+
+function addStrike(t, reason) {
+  while (strikes.length && t - strikes[0] > STRIKE_WINDOW_MS) strikes.shift();
+  strikes.push(t);
+  if (strikes.length >= STRIKES_NEEDED) {
+    flagClick(t, reason);
+    strikes.length = 0;
+  }
+}
+
+function registerClick(t, x, y) {
+  clickLog.push({ t: t, x: x, y: y });
+  if (clickLog.length > CLICK_BUFFER) clickLog.shift();
+  const n = clickLog.length;
+
+  if (n >= SAME_PIXEL_RUN) {
+    let same = true;
+    for (let i = n - SAME_PIXEL_RUN; i < n; i++) {
+      if (clickLog[i].x !== x || clickLog[i].y !== y) { same = false; break; }
+    }
+    const spanMs = t - clickLog[n - SAME_PIXEL_RUN].t;
+    if (same && spanMs / (SAME_PIXEL_RUN - 1) < SAME_PIXEL_MEAN_MS) {
+      addStrike(t, 'Same exact pixel (' + x + ', ' + y + ') ' + SAME_PIXEL_RUN + ' clicks in a row');
+    }
+  }
+
+  if (n > MIN_GAPS_FOR_TIMING) {
+    const gaps = [];
+    for (let i = 1; i < n; i++) gaps.push(clickLog[i].t - clickLog[i - 1].t);
+    const count = gaps.length;
+    const mean = gaps.reduce((a, b) => a + b, 0) / count;
+    let m2 = 0;
+    gaps.forEach(g => { m2 += (g - mean) * (g - mean); });
+    const sd = Math.sqrt(m2 / count);
+    if (mean < FAST_MEAN_MS && sd < SD_FLAG_MS) {
+      addStrike(t, 'Zero timing variance (gap sd ' + sd.toFixed(1) + ' ms)');
+    }
+  }
+
+  while (recentTimes.length && t - recentTimes[0] > 2000) recentTimes.shift();
+  recentTimes.push(t);
+  if (recentTimes.length > CPS_FLAG * 2) {
+    flagClick(t, 'Sustained ' + (recentTimes.length / 2).toFixed(0) + ' clicks per second over 2 seconds');
+  }
 }
 
 document.addEventListener('pointerdown', e => {
@@ -330,9 +484,13 @@ el.cookie.addEventListener('pointerup', e => {
   const t = performance.now();
   if (t - lastAccept < COOLDOWN) return;
   lastAccept = t;
-  const value = state.clickLevel;
+  running = true;
+  updateMusic();
+  const mult = state.rushLeft > 0 ? RUSH_MULT : 1;
+  const value = Math.round(clickValue(state.clickLevel) * mult * 100) / 100;
   addCookies(value);
   userClickTimes.push(t);
+  registerClick(t, e.clientX, e.clientY);
   buzz(t);
   spawnFloat(e.clientX, e.clientY, value);
   el.cookie.classList.remove('pulse');
@@ -360,9 +518,20 @@ ACHIEVEMENTS.forEach(a => {
   achCols[a.id[0]].appendChild(b);
 });
 
+function followBottom(ms) {
+  const body = document.body;
+  const end = performance.now() + ms;
+  function step() {
+    body.scrollTop = body.scrollHeight;
+    if (performance.now() < end) requestAnimationFrame(step);
+  }
+  step();
+}
+
 el.achToggle.addEventListener('click', () => {
   const open = el.achBody.classList.toggle('open');
   el.achToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+  if (open) followBottom(450);
 });
 
 let toastTimer = null;
@@ -396,41 +565,41 @@ function checkAchievements() {
 }
 
 function render() {
-  el.count.textContent = fmt(state.cookies);
-  el.cps.textContent = (state.cursors * CURSOR_CPS).toFixed(1) + ' cookies per second from cursors';
+  syncPointers();
+
+  setText(el.count, fmt(state.cookies));
+  setText(el.cps, (state.cursors * CURSOR_CPS).toFixed(1) + ' cookies per second from cursors');
 
   const now = performance.now();
   while (userClickTimes.length && now - userClickTimes[0] > 1000) userClickTimes.shift();
-  el.clicksps.textContent = userClickTimes.length + ' clicks per second';
+  setText(el.clicksps, userClickTimes.length + ' clicks per second');
 
-  el.timer.textContent = formatTime(elapsed);
+  setText(el.timer, formatTime(elapsed));
 
-  el.orbit.classList.toggle('hidden', state.cursors < 1);
-
-  const cp = cursorPrice();
-  el.cursorCost.textContent = fmt(cp);
-  el.cursorOwned.textContent = state.cursors ? '(' + state.cursors + ')' : '';
-  setButton(el.cursorBtn, el.cursorCost, el.cursorStatus, cp, state.cookies >= cp);
+  setText(el.cursorOwned, state.cursors ? '(' + state.cursors + ')' : '');
+  if (state.cursors >= MAX_CURSORS) {
+    setButton(el.cursorBtn, el.cursorCost, el.cursorStatus, 0, false, 'max');
+    setText(el.cursorStatus, 'maxed');
+  } else {
+    const cp = cursorPrice();
+    setButton(el.cursorBtn, el.cursorCost, el.cursorStatus, cp, state.cookies >= cp);
+  }
 
   const clp = clickPrice();
   const maxed = state.clickLevel >= MAX_CLICK_LEVEL;
-  el.clickOwned.textContent = 'level ' + state.clickLevel;
-  el.clickMeta.textContent = maxed ? 'maxed at 25 per click' : 'next: ' + (state.clickLevel + 1) + ' per click';
+  setText(el.clickOwned, 'level ' + state.clickLevel);
+  setText(el.clickMeta, maxed ? 'maxed at ' + clickValue(MAX_CLICK_LEVEL) + ' per click' : 'next: ' + clickValue(state.clickLevel + 1) + ' per click');
   if (maxed) {
     setButton(el.clickBtn, el.clickCost, el.clickStatus, 0, false, 'max');
-    el.clickStatus.textContent = 'maxed';
+    setText(el.clickStatus, 'maxed');
   } else {
     setButton(el.clickBtn, el.clickCost, el.clickStatus, clp, state.cookies >= clp);
   }
 
   const rp = rushPrice();
-  el.rushOwned.textContent = '';
-  if (state.rush) {
-    setButton(el.rushBtn, el.rushCost, el.rushStatus, 0, false, 'owned');
-    el.rushStatus.textContent = 'active';
-  } else {
-    setButton(el.rushBtn, el.rushCost, el.rushStatus, rp, state.cookies >= rp);
-  }
+  const rushing = state.rushLeft > 0;
+  setButton(el.rushBtn, el.rushCost, el.rushStatus, rp, !rushing && state.cookies >= rp);
+  if (rushing) setText(el.rushStatus, 'active ' + Math.ceil(state.rushLeft / 1000) + 's');
 }
 
 function save() {
@@ -441,7 +610,7 @@ function save() {
       total: state.total,
       cursors: state.cursors,
       clickLevel: state.clickLevel,
-      rush: state.rush,
+      rushStart: state.rushStart,
       elapsed: elapsed,
       unlocked: [...unlocked]
     }));
@@ -456,7 +625,7 @@ function load() {
     state.total = d.total || 0;
     state.cursors = d.cursors || 0;
     state.clickLevel = d.clickLevel || 1;
-    state.rush = !!d.rush;
+    state.rushStart = typeof d.rushStart === 'number' ? d.rushStart : null;
     elapsed = d.elapsed || 0;
     (d.unlocked || []).forEach(id => unlocked.add(id));
   } catch (e) {}
@@ -470,7 +639,9 @@ function wipe() {
 
 function suspicious(now) {
   rejects = rejects.filter(t => now - t < 2000);
-  return rejects.length >= DETECT_REJECTS || now < untrustedUntil;
+  if (now < untrustedUntil) detectReason = 'Scripted click event (not from a real finger or mouse)';
+  else if (rejects.length >= DETECT_REJECTS) detectReason = 'Clicks faster than 40 ms apart';
+  return rejects.length >= DETECT_REJECTS || now < flagUntil || now < untrustedUntil;
 }
 
 function updateWarnCount() {
@@ -479,10 +650,11 @@ function updateWarnCount() {
     return;
   }
   const left = Math.max(0, Math.ceil((WIPE_MS - flaggedMs) / 1000));
-  el.warnCount.textContent = 'progress deletes in ' + left + 's';
+  setText(el.warnCount, 'progress deletes in ' + left + 's');
 }
 
 function showWarn() {
+  el.warnReason.textContent = detectReason ? 'Reason: ' + detectReason : '';
   el.warnOk.textContent = warnedOnce ? 'continue anyway' : 'continue';
   el.warn.classList.remove('hidden');
   updateWarnCount();
@@ -495,18 +667,29 @@ function hideWarn() {
 el.warnOk.addEventListener('click', () => {
   rejects = [];
   untrustedUntil = 0;
+  flagUntil = 0;
+  clickLog.length = 0;
+  recentTimes.length = 0;
+  strikes.length = 0;
+  runAnchor = null;
+  runCount = 0;
   warnedOnce = true;
   paused = false;
   hideWarn();
 });
 
+function setMenu(open) {
+  el.menuPanel.classList.toggle('open', open);
+  el.menuPanel.style.height = open ? el.menuPanel.querySelector('.panelInner').offsetHeight + 'px' : '';
+  el.menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+
 el.menuBtn.addEventListener('click', e => {
   e.stopPropagation();
-  el.menuPanel.classList.toggle('hidden');
+  setMenu(true);
 });
-document.addEventListener('click', e => {
-  if (!el.menuPanel.contains(e.target) && e.target !== el.menuBtn) el.menuPanel.classList.add('hidden');
-});
+document.addEventListener('click', () => setMenu(false));
+el.musicBtn.addEventListener('click', () => setMusicOn(!musicOn));
 el.clearBtn.addEventListener('click', e => {
   e.stopPropagation();
   if (!clearArmed) {
@@ -523,20 +706,25 @@ el.clearBtn.addEventListener('click', e => {
 });
 
 load();
+el.musicBtn.textContent = musicOn ? 'music on' : 'music off';
 refreshAchievementUI();
 render();
 updateOrbit();
 
 setInterval(save, 3000);
-window.addEventListener('pagehide', save);
-document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
+window.addEventListener('pagehide', () => { running = false; silenceMusic(); save(); });
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    running = false;
+    silenceMusic();
+    save();
+  }
+});
 
 let last = performance.now();
 function frame(now) {
   const dt = Math.min(now - last, 1000);
   last = now;
-  orbitAngle = (orbitAngle + dt * ORBIT_DEG_PER_MS) % 360;
-  updateOrbit();
   const sus = suspicious(now);
 
   if (!paused && sus) {
@@ -545,20 +733,28 @@ function frame(now) {
   }
 
   if (paused) {
-    if (warnedOnce && sus) {
+    if (warnedOnce) {
       flaggedMs += dt;
       updateWarnCount();
       if (flaggedMs >= WIPE_MS) { wipe(); return; }
     }
+    updateMusic();
+    updateOrbit();
     render();
     requestAnimationFrame(frame);
     return;
   }
 
-  elapsed += dt;
-  const sec = dt / 1000;
-  addCookies(state.cursors * CURSOR_CPS * sec);
-  if (state.rush) addCookies(RUSH_CLICKS_PER_SEC * 2 * state.clickLevel * sec);
+  if (running) {
+    elapsed += dt;
+    orbitAngle = (orbitAngle + dt * ORBIT_DEG_PER_MS) % 360;
+    const sec = dt / 1000;
+    addCookies(state.cursors * CURSOR_CPS * sec);
+    if (state.rushLeft > 0) state.rushLeft = Math.max(0, state.rushLeft - dt);
+  }
+
+  updateMusic();
+  updateOrbit();
   render();
   checkAchievements();
   requestAnimationFrame(frame);
