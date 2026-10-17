@@ -71,11 +71,11 @@ body{height:100%;height:100dvh;overflow-y:auto;background:radial-gradient(circle
 .panel.open #menuBtn{opacity:0;pointer-events:none}
 .panelInner{position:absolute;top:0;left:0;width:200px;padding:0 6px 0;text-align:center;opacity:0;pointer-events:none;transition:opacity 0.12s ease}
 .panel.open .panelInner{opacity:1;pointer-events:auto;transition:opacity 0.25s ease 0.18s}
-#musicBtn,#clearBtn,#fluidBtn{width:100%;padding:8px 8px;border:none;background:none;border-radius:8px;font:inherit;font-size:0.95rem;font-weight:700;cursor:pointer;text-align:center}
+#musicBtn,#clearBtn,.setBtn{width:100%;padding:8px 8px;border:none;background:none;border-radius:8px;font:inherit;font-size:0.95rem;font-weight:700;cursor:pointer;text-align:center}
 #musicBtn{color:#3b2716}
-#musicBtn:hover,#clearBtn:hover,#fluidBtn:hover{background:rgba(120,70,20,0.08)}
+#musicBtn:hover,#clearBtn:hover,.setBtn:hover{background:rgba(120,70,20,0.08)}
 #clearBtn{color:#a1260d}
-#fluidBtn{color:#3b2716}
+.setBtn{color:#3b2716}
 .divider{border:none;border-top:1px solid rgba(120,70,20,0.15);margin:4px 4px}
 .warn{position:fixed;inset:0;background:rgba(40,25,15,0.6);display:flex;align-items:center;justify-content:center;z-index:30;padding:20px}
 .warn.hidden{display:none}
@@ -84,6 +84,13 @@ body{height:100%;height:100dvh;overflow-y:auto;background:radial-gradient(circle
 .warnbox p{font-size:0.92rem;line-height:1.4;margin-bottom:8px}
 #warnReason{font-size:0.8rem;color:#7a6650;min-height:1.2em}
 #warnCount{font-weight:900;color:#a1260d;min-height:1.2em}
+@media (min-width:800px){
+.wrap{display:grid;grid-template-columns:1fr 1fr;align-items:start;column-gap:48px;row-gap:20px;max-width:980px;padding-top:48px}
+.stats{grid-column:1;grid-row:1}
+.cookieWrap{grid-column:1;grid-row:2;width:320px;height:320px;margin:20px auto;justify-self:center}
+.shop{grid-column:2;grid-row:1}
+.ach{grid-column:2;grid-row:2}
+}
 #warnOk{margin-top:12px;width:100%;padding:12px;border:2px solid #b8600f;border-radius:14px;background:linear-gradient(180deg,#ffc75e,#f59a2b);color:#3b1f08;font:inherit;font-weight:900;cursor:pointer}
 </style>
 </head>
@@ -96,7 +103,9 @@ body{height:100%;height:100dvh;overflow-y:auto;background:radial-gradient(circle
       <hr class="divider">
       <button id="clearBtn">clear progress</button>
       <hr class="divider">
-      <button id="fluidBtn">performance: low</button>
+      <button id="perfBtn" class="setBtn">performance: low</button>
+      <button id="counterBtn" class="setBtn">counter: low</button>
+      <button id="cursorsBtn" class="setBtn">cursors: high</button>
     </div>
   </div>
 </div>
@@ -196,6 +205,8 @@ body{height:100%;height:100dvh;overflow-y:auto;background:radial-gradient(circle
 const SAVE_KEY = 'cookieclicker-save-v1';
 const MUSIC_KEY = 'cookieclicker-music';
 const PERF_KEY = 'cookieclicker-perf';
+const COUNTER_KEY = 'cookieclicker-counter';
+const CURSOR_KEY = 'cookieclicker-cursors';
 const CURSOR_CPS_EARLY = 0.2;
 const CURSOR_CPS_LATE = 0.5;
 const CURSOR_HALF = 17;
@@ -225,7 +236,9 @@ let elapsed = 0;
 let orbitAngle = 0;
 let frameNo = 0;
 let forceCount = true;
-let highPerf = localStorage.getItem(PERF_KEY) === 'high';
+let perfMaster = localStorage.getItem(PERF_KEY) === 'high' ? 'high' : 'low';
+let counterHigh = (localStorage.getItem(COUNTER_KEY) ?? perfMaster) === 'high';
+let cursorsHigh = (localStorage.getItem(CURSOR_KEY) ?? 'high') === 'high';
 let running = false;
 const unlocked = new Set();
 const userClickTimes = [];
@@ -283,7 +296,7 @@ const el = {
   clickBtn: $('clickBtn'), clickCost: $('clickCost'), clickOwned: $('clickOwned'), clickMeta: $('clickMeta'), clickStatus: $('clickStatus'),
   rushBtn: $('rushBtn'), rushCost: $('rushCost'), rushStatus: $('rushStatus'),
   achBox: $('achBox'), achGrid: $('achGrid'), achSummary: $('achSummary'), achToggle: $('achToggle'), achBody: $('achBody'), toast: $('toast'),
-  menuBtn: $('menuBtn'), menuPanel: $('menuPanel'), musicBtn: $('musicBtn'), clearBtn: $('clearBtn'), fluidBtn: $('fluidBtn'),
+  menuBtn: $('menuBtn'), menuPanel: $('menuPanel'), musicBtn: $('musicBtn'), clearBtn: $('clearBtn'), perfBtn: $('perfBtn'), counterBtn: $('counterBtn'), cursorsBtn: $('cursorsBtn'),
   warn: $('warn'), warnReason: $('warnReason'), warnCount: $('warnCount'), warnOk: $('warnOk'), bgm: $('bgm')
 };
 
@@ -374,7 +387,7 @@ function buzz(now) {
 }
 
 function syncPointers() {
-  const n = Math.min(state.cursors, MAX_VISIBLE_CURSORS);
+  const n = Math.min(state.cursors, visibleCap());
   while (pointers.length < n) {
     const p = document.createElement('div');
     p.className = 'ptr';
@@ -390,7 +403,7 @@ function syncPointers() {
 function updateOrbit() {
   const n = pointers.length;
   el.orbit.classList.toggle('hidden', n < 1);
-  if (frameNo % (highPerf ? 1 : 2)) return;
+  if (frameNo % (cursorsHigh ? 1 : 2)) return;
   for (let i = 0; i < n; i++) {
     const a = (orbitAngle + i * 360 / n) * Math.PI / 180;
     const x = ORBIT_RADIUS * Math.cos(a);
@@ -598,7 +611,7 @@ function checkAchievements() {
 function render() {
   syncPointers();
 
-  if (highPerf || forceCount || frameNo % 20 === 0) {
+  if (counterHigh || forceCount || frameNo % 20 === 0) {
     setText(el.count, fmt(state.cookies));
     forceCount = false;
   }
@@ -740,16 +753,43 @@ el.clearBtn.addEventListener('click', e => {
   wipe();
 });
 
-function perfLabel() { return 'performance: ' + (highPerf ? 'high' : 'low'); }
-el.fluidBtn.textContent = perfLabel();
-el.fluidBtn.addEventListener('click', e => {
-  e.stopPropagation();
-  highPerf = !highPerf;
-  try { localStorage.setItem(PERF_KEY, highPerf ? 'high' : 'low'); } catch (err) {}
-  el.fluidBtn.textContent = perfLabel();
+function store(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+function visibleCap() { return perfMaster === 'high' ? MAX_VISIBLE_CURSORS : Math.floor(MAX_VISIBLE_CURSORS / 2); }
+function refreshPerfLabels() {
+  el.perfBtn.textContent = 'performance: ' + perfMaster;
+  el.counterBtn.textContent = 'counter: ' + (counterHigh ? 'high' : 'low');
+  el.cursorsBtn.textContent = 'cursors: ' + (cursorsHigh ? 'high' : 'low');
+}
+function setPerf(p) {
+  perfMaster = p;
+  counterHigh = p === 'high';
+  cursorsHigh = true;
+  store(PERF_KEY, p);
+  store(COUNTER_KEY, counterHigh ? 'high' : 'low');
+  store(CURSOR_KEY, 'high');
   forceCount = true;
+  refreshPerfLabels();
+  render();
+}
+el.perfBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  setPerf(perfMaster === 'high' ? 'low' : 'high');
+});
+el.counterBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  counterHigh = !counterHigh;
+  store(COUNTER_KEY, counterHigh ? 'high' : 'low');
+  forceCount = true;
+  refreshPerfLabels();
   render();
 });
+el.cursorsBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  cursorsHigh = !cursorsHigh;
+  store(CURSOR_KEY, cursorsHigh ? 'high' : 'low');
+  refreshPerfLabels();
+});
+refreshPerfLabels();
 
 load();
 el.musicBtn.textContent = musicOn ? 'music on' : 'music off';
