@@ -238,7 +238,7 @@ let frameNo = 0;
 let forceCount = true;
 let perfMaster = localStorage.getItem(PERF_KEY) === 'high' ? 'high' : 'low';
 let counterHigh = (localStorage.getItem(COUNTER_KEY) ?? perfMaster) === 'high';
-let cursorsHigh = (localStorage.getItem(CURSOR_KEY) ?? 'high') === 'high';
+let cursorsHigh = (localStorage.getItem(CURSOR_KEY) ?? perfMaster) === 'high';
 let running = false;
 const unlocked = new Set();
 const userClickTimes = [];
@@ -403,7 +403,6 @@ function syncPointers() {
 function updateOrbit() {
   const n = pointers.length;
   el.orbit.classList.toggle('hidden', n < 1);
-  if (frameNo % (cursorsHigh ? 1 : 2)) return;
   for (let i = 0; i < n; i++) {
     const a = (orbitAngle + i * 360 / n) * Math.PI / 180;
     const x = ORBIT_RADIUS * Math.cos(a);
@@ -754,7 +753,7 @@ el.clearBtn.addEventListener('click', e => {
 });
 
 function store(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
-function visibleCap() { return perfMaster === 'high' ? MAX_VISIBLE_CURSORS : Math.floor(MAX_VISIBLE_CURSORS / 2); }
+function visibleCap() { return cursorsHigh ? MAX_VISIBLE_CURSORS : Math.floor(MAX_VISIBLE_CURSORS / 2); }
 function refreshPerfLabels() {
   el.perfBtn.textContent = 'performance: ' + perfMaster;
   el.counterBtn.textContent = 'counter: ' + (counterHigh ? 'high' : 'low');
@@ -763,10 +762,10 @@ function refreshPerfLabels() {
 function setPerf(p) {
   perfMaster = p;
   counterHigh = p === 'high';
-  cursorsHigh = true;
+  cursorsHigh = p === 'high';
   store(PERF_KEY, p);
   store(COUNTER_KEY, counterHigh ? 'high' : 'low');
-  store(CURSOR_KEY, 'high');
+  store(CURSOR_KEY, cursorsHigh ? 'high' : 'low');
   forceCount = true;
   refreshPerfLabels();
   render();
