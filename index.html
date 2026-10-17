@@ -51,7 +51,9 @@ body{height:100%;height:100dvh;overflow-y:auto;background:radial-gradient(circle
 .achBody>.achgrid{min-height:0;overflow:hidden}
 .achgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .achcol{display:flex;flex-direction:column;gap:8px;min-width:0}
-.badge{padding:10px 12px;border-radius:12px;background:#eee3d3;font-size:0.8rem;color:#7a6650;opacity:0.6;text-align:center}
+.badge{height:48px;display:flex;align-items:center;justify-content:center;padding:6px 10px;border-radius:12px;background:#eee3d3;border:1px solid transparent;font-size:0.8rem;line-height:1.2;color:#7a6650;opacity:0.6;text-align:center}
+.badge.wide{grid-column:1 / -1;height:56px;font-size:0.95rem;font-weight:900;letter-spacing:0.04em}
+.badge.wide.on{background:linear-gradient(180deg,#fff6c4,#f5c542 55%,#d9a02a);color:#3b1f08;border-color:#b8860b}
 .badge.on{background:linear-gradient(180deg,#ffd27a,#f5b04a);color:#3b1f08;opacity:1;font-weight:800;border:1px solid #b8600f}
 #toast{position:fixed;top:20px;left:50%;transform:translate(-50%,-160%);background:#3b2716;color:#fff7ea;padding:12px 20px;border-radius:14px;font-weight:700;font-size:0.95rem;transition:transform 0.35s ease;z-index:20;box-shadow:0 8px 20px rgba(0,0,0,0.25);white-space:nowrap}
 #toast.show{transform:translate(-50%,0)}
@@ -159,7 +161,7 @@ body{height:100%;height:100dvh;overflow-y:auto;background:radial-gradient(circle
     <button class="item" id="rushBtn">
       <div class="left">
         <span class="name">rush</span>
-        <span class="meta">3x cookies per click for 10 seconds</span>
+        <span class="meta">2.8x cookies per click for 10 seconds</span>
       </div>
       <div class="right">
         <span class="cost" id="rushCost"></span>
@@ -196,12 +198,12 @@ const CURSOR_GROWTH = 1.04;
 const MAX_CURSORS = 35;
 const CLICK_BASE = 40;
 const CLICK_GROWTH = 1.3;
-const CLICK_STEP = 0.3;
+const CLICK_STEP = 0.2;
 const MAX_CLICK_LEVEL = 25;
 const MAX_VISIBLE_CURSORS = 12;
 const RUSH_COST = 1500;
 const RUSH_MS = 10000;
-const RUSH_MULT = 3;
+const RUSH_MULT = 2.8;
 const RUSH_STEP_MS = 8 * 60000;
 const RUSH_STEP_GROWTH = 1.25;
 const COOLDOWN = 40;
@@ -283,7 +285,11 @@ el.bgm.volume = 0.5;
 
 function cursorPrice() { return Math.ceil(CURSOR_BASE * Math.pow(CURSOR_GROWTH, state.cursors)); }
 function cursorCps(n) { return Math.min(n, CURSOR_HALF) * CURSOR_CPS_EARLY + Math.max(0, n - CURSOR_HALF) * CURSOR_CPS_LATE; }
-function clickValue(level) { return Math.round((1 + CLICK_STEP * (level - 1) * level / 2) * 10) / 10; }
+function clickValue(level) {
+  let v = 1;
+  for (let k = 1; k < level; k++) v += CLICK_STEP * Math.sqrt(k);
+  return Math.round(v * 10) / 10;
+}
 function setText(node, text) {
   if (node._t !== text) { node.textContent = text; node._t = text; }
 }
@@ -528,6 +534,11 @@ ACHIEVEMENTS.forEach(a => {
   b.textContent = a.label;
   achCols[a.id[0]].appendChild(b);
 });
+const goldBadge = document.createElement('div');
+goldBadge.className = 'badge wide';
+goldBadge.id = 'ach-gold';
+goldBadge.textContent = 'GOLDEN SKIN COOKIE';
+el.achGrid.appendChild(goldBadge);
 
 function followBottom(ms) {
   const body = document.body;
@@ -558,7 +569,9 @@ function refreshAchievementUI() {
     $('ach-' + a.id).classList.toggle('on', unlocked.has(a.id));
   });
   el.achSummary.textContent = 'achievements ' + unlocked.size + '/' + ACHIEVEMENTS.length;
-  el.cookie.classList.toggle('gold', unlocked.size === ACHIEVEMENTS.length);
+  const allDone = unlocked.size === ACHIEVEMENTS.length;
+  el.cookie.classList.toggle('gold', allDone);
+  $('ach-gold').classList.toggle('on', allDone);
 }
 
 function checkAchievements() {
