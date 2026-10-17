@@ -19,6 +19,9 @@ body{height:100%;height:100dvh;overflow-y:auto;background:radial-gradient(circle
 #cookie{position:absolute;inset:0;width:100%;height:100%;border:none;background:none;padding:0;cursor:pointer;transition:transform 0.08s ease-out;outline:none}
 #cookie:active{transform:scale(0.94)}
 #cookie svg{width:100%;height:100%;display:block}
+#cookie.gold #dough stop:nth-child(1){stop-color:#fff6c4}
+#cookie.gold #dough stop:nth-child(2){stop-color:#f5c542}
+#cookie.gold #dough stop:nth-child(3){stop-color:#b8860b}
 .cookieWrap::before{content:'';position:absolute;inset:-4% -8% -14% -8%;border-radius:50%;background:radial-gradient(closest-side,rgba(120,70,20,0.3) 0%,rgba(120,70,20,0.18) 55%,rgba(120,70,20,0) 100%);pointer-events:none}
 #cookie.pulse{animation:pulse 0.15s ease-out}
 @keyframes pulse{50%{transform:scale(1.04)}}
@@ -60,12 +63,12 @@ body{height:100%;height:100dvh;overflow-y:auto;background:radial-gradient(circle
 .panel.open #menuBtn{opacity:0;pointer-events:none}
 .panelInner{position:absolute;top:0;left:0;width:200px;padding:0 6px 0;text-align:center;opacity:0;pointer-events:none;transition:opacity 0.12s ease}
 .panel.open .panelInner{opacity:1;pointer-events:auto;transition:opacity 0.25s ease 0.18s}
-#musicBtn,#clearBtn{width:100%;padding:8px 8px;border:none;background:none;border-radius:8px;font:inherit;font-size:0.95rem;font-weight:700;cursor:pointer;text-align:center}
+#musicBtn,#clearBtn,#fluidBtn{width:100%;padding:8px 8px;border:none;background:none;border-radius:8px;font:inherit;font-size:0.95rem;font-weight:700;cursor:pointer;text-align:center}
 #musicBtn{color:#3b2716}
-#musicBtn:hover,#clearBtn:hover{background:rgba(120,70,20,0.08)}
+#musicBtn:hover,#clearBtn:hover,#fluidBtn:hover{background:rgba(120,70,20,0.08)}
 #clearBtn{color:#a1260d}
+#fluidBtn{color:#3b2716}
 .divider{border:none;border-top:1px solid rgba(120,70,20,0.15);margin:4px 4px}
-.panelNote{padding:0 4px 8px;font-size:0.72rem;line-height:1.3;color:#7a6650}
 .warn{position:fixed;inset:0;background:rgba(40,25,15,0.6);display:flex;align-items:center;justify-content:center;z-index:30;padding:20px}
 .warn.hidden{display:none}
 .warnbox{background:#fff7ea;border-radius:18px;padding:24px 22px;max-width:320px;width:100%;text-align:center;box-shadow:0 12px 30px rgba(0,0,0,0.3)}
@@ -85,7 +88,7 @@ body{height:100%;height:100dvh;overflow-y:auto;background:radial-gradient(circle
       <hr class="divider">
       <button id="clearBtn">clear progress</button>
       <hr class="divider">
-      <p class="panelNote">progress is saved to local storage and clearing web browser cache will delete progress</p>
+      <button id="fluidBtn">counter: stepped</button>
     </div>
   </div>
 </div>
@@ -136,7 +139,7 @@ body{height:100%;height:100dvh;overflow-y:auto;background:radial-gradient(circle
     <button class="item" id="cursorBtn">
       <div class="left">
         <span class="name">cursor <span class="owned" id="cursorOwned"></span></span>
-        <span class="meta">+0.1 cookies per second</span>
+        <span class="meta" id="cursorMeta"></span>
       </div>
       <div class="right">
         <span class="cost" id="cursorCost"></span>
@@ -156,7 +159,7 @@ body{height:100%;height:100dvh;overflow-y:auto;background:radial-gradient(circle
     <button class="item" id="rushBtn">
       <div class="left">
         <span class="name">rush</span>
-        <span class="meta">2.5x cookies per click for 5 seconds</span>
+        <span class="meta">3x cookies per click for 10 seconds</span>
       </div>
       <div class="right">
         <span class="cost" id="rushCost"></span>
@@ -184,18 +187,21 @@ body{height:100%;height:100dvh;overflow-y:auto;background:radial-gradient(circle
 <script>
 const SAVE_KEY = 'cookieclicker-save-v1';
 const MUSIC_KEY = 'cookieclicker-music';
-const CURSOR_CPS = 0.1;
+const FLUID_KEY = 'cookieclicker-fluid';
+const CURSOR_CPS_EARLY = 0.2;
+const CURSOR_CPS_LATE = 0.5;
+const CURSOR_HALF = 17;
 const CURSOR_BASE = 15;
 const CURSOR_GROWTH = 1.04;
 const MAX_CURSORS = 35;
-const CLICK_BASE = 50;
-const CLICK_GROWTH = 1.45;
+const CLICK_BASE = 40;
+const CLICK_GROWTH = 1.3;
 const CLICK_STEP = 0.3;
 const MAX_CLICK_LEVEL = 25;
 const MAX_VISIBLE_CURSORS = 12;
 const RUSH_COST = 1500;
-const RUSH_MS = 5000;
-const RUSH_MULT = 2.5;
+const RUSH_MS = 10000;
+const RUSH_MULT = 3;
 const RUSH_STEP_MS = 8 * 60000;
 const RUSH_STEP_GROWTH = 1.25;
 const COOLDOWN = 40;
@@ -209,6 +215,9 @@ const PTR_SVG = '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><pa
 const state = { cookies: 0, total: 0, cursors: 0, clickLevel: 1, rushLeft: 0, rushStart: null };
 let elapsed = 0;
 let orbitAngle = 0;
+let frameNo = 0;
+let forceCount = true;
+let fluidCount = localStorage.getItem(FLUID_KEY) === '1';
 let running = false;
 const unlocked = new Set();
 const userClickTimes = [];
@@ -262,18 +271,19 @@ const $ = id => document.getElementById(id);
 const el = {
   count: $('count'), cps: $('cps'), clicksps: $('clicksps'), timer: $('timer'), cookie: $('cookie'),
   orbit: $('orbit'),
-  cursorBtn: $('cursorBtn'), cursorCost: $('cursorCost'), cursorOwned: $('cursorOwned'), cursorStatus: $('cursorStatus'),
+  cursorBtn: $('cursorBtn'), cursorMeta: $('cursorMeta'), cursorCost: $('cursorCost'), cursorOwned: $('cursorOwned'), cursorStatus: $('cursorStatus'),
   clickBtn: $('clickBtn'), clickCost: $('clickCost'), clickOwned: $('clickOwned'), clickMeta: $('clickMeta'), clickStatus: $('clickStatus'),
   rushBtn: $('rushBtn'), rushCost: $('rushCost'), rushStatus: $('rushStatus'),
   achBox: $('achBox'), achGrid: $('achGrid'), achSummary: $('achSummary'), achToggle: $('achToggle'), achBody: $('achBody'), toast: $('toast'),
-  menuBtn: $('menuBtn'), menuPanel: $('menuPanel'), musicBtn: $('musicBtn'), clearBtn: $('clearBtn'),
+  menuBtn: $('menuBtn'), menuPanel: $('menuPanel'), musicBtn: $('musicBtn'), clearBtn: $('clearBtn'), fluidBtn: $('fluidBtn'),
   warn: $('warn'), warnReason: $('warnReason'), warnCount: $('warnCount'), warnOk: $('warnOk'), bgm: $('bgm')
 };
 
 el.bgm.volume = 0.5;
 
 function cursorPrice() { return Math.ceil(CURSOR_BASE * Math.pow(CURSOR_GROWTH, state.cursors)); }
-function clickValue(level) { return Math.round((1 + (level - 1) * CLICK_STEP) * 10) / 10; }
+function cursorCps(n) { return Math.min(n, CURSOR_HALF) * CURSOR_CPS_EARLY + Math.max(0, n - CURSOR_HALF) * CURSOR_CPS_LATE; }
+function clickValue(level) { return Math.round((1 + CLICK_STEP * (level - 1) * level / 2) * 10) / 10; }
 function setText(node, text) {
   if (node._t !== text) { node.textContent = text; node._t = text; }
 }
@@ -368,6 +378,7 @@ function syncPointers() {
 function updateOrbit() {
   const n = pointers.length;
   el.orbit.classList.toggle('hidden', n < 1);
+  if (frameNo % 5) return;
   for (let i = 0; i < n; i++) {
     const a = (orbitAngle + i * 360 / n) * Math.PI / 180;
     const x = ORBIT_RADIUS * Math.cos(a);
@@ -547,6 +558,7 @@ function refreshAchievementUI() {
     $('ach-' + a.id).classList.toggle('on', unlocked.has(a.id));
   });
   el.achSummary.textContent = 'achievements ' + unlocked.size + '/' + ACHIEVEMENTS.length;
+  el.cookie.classList.toggle('gold', unlocked.size === ACHIEVEMENTS.length);
 }
 
 function checkAchievements() {
@@ -567,8 +579,11 @@ function checkAchievements() {
 function render() {
   syncPointers();
 
-  setText(el.count, fmt(state.cookies));
-  setText(el.cps, (state.cursors * CURSOR_CPS).toFixed(1) + ' cookies per second from cursors');
+  if (fluidCount || forceCount || frameNo % 60 === 0) {
+    setText(el.count, fmt(state.cookies));
+    forceCount = false;
+  }
+  setText(el.cps, cursorCps(state.cursors).toFixed(1) + ' cookies per second from cursors');
 
   const now = performance.now();
   while (userClickTimes.length && now - userClickTimes[0] > 1000) userClickTimes.shift();
@@ -577,6 +592,7 @@ function render() {
   setText(el.timer, formatTime(elapsed));
 
   setText(el.cursorOwned, state.cursors ? '(' + state.cursors + ')' : '');
+  setText(el.cursorMeta, state.cursors >= MAX_CURSORS ? 'maxed at ' + cursorCps(MAX_CURSORS).toFixed(1) + ' per second' : 'next: +' + (cursorCps(state.cursors + 1) - cursorCps(state.cursors)).toFixed(1) + ' cookies per second');
   if (state.cursors >= MAX_CURSORS) {
     setButton(el.cursorBtn, el.cursorCost, el.cursorStatus, 0, false, 'max');
     setText(el.cursorStatus, 'maxed');
@@ -705,6 +721,16 @@ el.clearBtn.addEventListener('click', e => {
   wipe();
 });
 
+el.fluidBtn.textContent = fluidCount ? 'counter: fluid' : 'counter: stepped';
+el.fluidBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  fluidCount = !fluidCount;
+  try { localStorage.setItem(FLUID_KEY, fluidCount ? '1' : '0'); } catch (err) {}
+  el.fluidBtn.textContent = fluidCount ? 'counter: fluid' : 'counter: stepped';
+  forceCount = true;
+  render();
+});
+
 load();
 el.musicBtn.textContent = musicOn ? 'music on' : 'music off';
 refreshAchievementUI();
@@ -723,6 +749,7 @@ document.addEventListener('visibilitychange', () => {
 
 let last = performance.now();
 function frame(now) {
+  frameNo++;
   const dt = Math.min(now - last, 1000);
   last = now;
   const sus = suspicious(now);
@@ -749,7 +776,7 @@ function frame(now) {
     elapsed += dt;
     orbitAngle = (orbitAngle + dt * ORBIT_DEG_PER_MS) % 360;
     const sec = dt / 1000;
-    addCookies(state.cursors * CURSOR_CPS * sec);
+    addCookies(cursorCps(state.cursors) * sec);
     if (state.rushLeft > 0) state.rushLeft = Math.max(0, state.rushLeft - dt);
   }
 
