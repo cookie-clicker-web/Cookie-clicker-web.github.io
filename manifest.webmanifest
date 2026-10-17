@@ -1,6 +1,6 @@
 {
   "name": "Cookie Clicker",
-  "short_name": "Cookie",
+  "short_name": "Cookie Clicker",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
