@@ -628,6 +628,7 @@ function render() {
 
   if (counterHigh || forceCount || frameNo % 20 === 0) {
     setText(el.count, fmt(state.cookies));
+    setText(el.collected, fmt(state.total) + ' cookies collected');
     forceCount = false;
   }
   setText(el.cps, cursorCps(state.cursors).toFixed(1) + ' cookies per second from cursors');
@@ -637,7 +638,6 @@ function render() {
   setText(el.clicksps, userClickTimes.length + ' clicks per second');
 
   setText(el.timer, formatTime(elapsed));
-  setText(el.collected, fmt(state.total) + ' cookies collected');
 
   setText(el.cursorOwned, state.cursors ? '(' + state.cursors + ')' : '');
   setText(el.cursorMeta, state.cursors >= MAX_CURSORS ? 'maxed at ' + cursorCps(MAX_CURSORS).toFixed(1) + ' per second' : 'next: +' + (cursorCps(state.cursors + 1) - cursorCps(state.cursors)).toFixed(1) + ' cookies per second');
