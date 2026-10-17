@@ -88,7 +88,7 @@ body{height:100%;height:100dvh;overflow-y:auto;background:radial-gradient(circle
       <hr class="divider">
       <button id="clearBtn">clear progress</button>
       <hr class="divider">
-      <button id="fluidBtn">counter: stepped</button>
+      <button id="fluidBtn">performance: low</button>
     </div>
   </div>
 </div>
@@ -187,7 +187,7 @@ body{height:100%;height:100dvh;overflow-y:auto;background:radial-gradient(circle
 <script>
 const SAVE_KEY = 'cookieclicker-save-v1';
 const MUSIC_KEY = 'cookieclicker-music';
-const FLUID_KEY = 'cookieclicker-fluid';
+const PERF_KEY = 'cookieclicker-perf';
 const CURSOR_CPS_EARLY = 0.2;
 const CURSOR_CPS_LATE = 0.5;
 const CURSOR_HALF = 17;
@@ -217,7 +217,7 @@ let elapsed = 0;
 let orbitAngle = 0;
 let frameNo = 0;
 let forceCount = true;
-let fluidCount = localStorage.getItem(FLUID_KEY) === '1';
+let highPerf = localStorage.getItem(PERF_KEY) === 'high';
 let running = false;
 const unlocked = new Set();
 const userClickTimes = [];
@@ -378,7 +378,7 @@ function syncPointers() {
 function updateOrbit() {
   const n = pointers.length;
   el.orbit.classList.toggle('hidden', n < 1);
-  if (frameNo % 5) return;
+  if (frameNo % (highPerf ? 1 : 2)) return;
   for (let i = 0; i < n; i++) {
     const a = (orbitAngle + i * 360 / n) * Math.PI / 180;
     const x = ORBIT_RADIUS * Math.cos(a);
@@ -579,7 +579,7 @@ function checkAchievements() {
 function render() {
   syncPointers();
 
-  if (fluidCount || forceCount || frameNo % 60 === 0) {
+  if (highPerf || forceCount || frameNo % 20 === 0) {
     setText(el.count, fmt(state.cookies));
     forceCount = false;
   }
@@ -721,12 +721,13 @@ el.clearBtn.addEventListener('click', e => {
   wipe();
 });
 
-el.fluidBtn.textContent = fluidCount ? 'counter: fluid' : 'counter: stepped';
+function perfLabel() { return 'performance: ' + (highPerf ? 'high' : 'low'); }
+el.fluidBtn.textContent = perfLabel();
 el.fluidBtn.addEventListener('click', e => {
   e.stopPropagation();
-  fluidCount = !fluidCount;
-  try { localStorage.setItem(FLUID_KEY, fluidCount ? '1' : '0'); } catch (err) {}
-  el.fluidBtn.textContent = fluidCount ? 'counter: fluid' : 'counter: stepped';
+  highPerf = !highPerf;
+  try { localStorage.setItem(PERF_KEY, highPerf ? 'high' : 'low'); } catch (err) {}
+  el.fluidBtn.textContent = perfLabel();
   forceCount = true;
   render();
 });
